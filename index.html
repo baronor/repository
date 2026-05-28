@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formularz kontaktowy</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f3f3f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 460px;
+        }
+        h2 { color: #0078d4; margin-bottom: 24px; }
+        label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+        input, textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid #ccc; border-radius: 4px;
+            font-size: 14px; margin-bottom: 16px;
+        }
+        textarea { height: 120px; resize: vertical; }
+        button {
+            width: 100%; padding: 12px;
+            background: #0078d4; color: white;
+            border: none; border-radius: 4px;
+            font-size: 15px; cursor: pointer;
+        }
+        button:hover { background: #005a9e; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        #status {
+            margin-top: 16px; padding: 10px;
+            border-radius: 4px; font-size: 14px;
+            display: none; text-align: center;
+        }
+        .ok  { background: #dff6dd; color: #107c10; }
+        .err { background: #fde7e9; color: #d13438; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>📬 Formularz kontaktowy</h2>
+
+    <label>Imię i nazwisko</label>
+    <input type="text" id="name" placeholder="np. Jan Kowalski">
+
+    <label>Wiadomość</label>
+    <textarea id="message" placeholder="Wpisz swoją wiadomość..."></textarea>
+
+    <button id="btn" onclick="send()">Wyślij</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    const FUNCTION_URL = 'https://func-formularz-fucpdjgjbwceegez.westeurope-01.azurewebsites.net/api/Sendemail?code=mhbBg7AXaX6GrFUSLuf4m-n_8-mizaARwQD3a_nfsMArAzFuZ3UIXQ==';
+
+    async function send() {
+        const name    = document.getElementById('name').value.trim();
+        const message = document.getElementById('message').value.trim();
+        const btn     = document.getElementById('btn');
+        const status  = document.getElementById('status');
+
+        if (!name || !message) {
+            showStatus('Wypełnij wszystkie pola.', false);
+            return;
+        }
+
+        btn.disabled     = true;
+        btn.textContent  = 'Wysyłanie...';
+        status.style.display = 'none';
+
+        try {
+            const res = await fetch(FUNCTION_URL, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ name, message })
+            });
+
+            if (res.ok) {
+                showStatus('✅ Wiadomość wysłana pomyślnie!', true);
+                document.getElementById('name').value    = '';
+                document.getElementById('message').value = '';
+            } else {
+                showStatus('❌ Błąd wysyłki. Spróbuj ponownie.', false);
+            }
+        } catch (e) {
+            showStatus('❌ Błąd połączenia: ' + e.message, false);
+        }
+
+        btn.disabled    = false;
+        btn.textContent = 'Wyślij';
+    }
+
+    function showStatus(msg, ok) {
+        const s = document.getElementById('status');
+        s.textContent    = msg;
+        s.className      = ok ? 'ok' : 'err';
+        s.style.display  = 'block';
+    }
+</script>
+</body>
+</html>
